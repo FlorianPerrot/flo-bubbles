@@ -10,7 +10,7 @@ Animation en cours :
 Animation fini:
 ![rotation_fini](/uploads/d2c144d978b0256a31c8cab5f705500f/rotation_fini.png)
 
-## Attributes disponibles
+## Attributs disponibles
 
 - **startDeg:** Integer - deg pour lequel l'animation commence, par défault 0
 - **nbSteps:** Integer - Nombre d'étape entre chaque enfant, par défault 0
