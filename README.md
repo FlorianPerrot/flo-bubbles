@@ -4,6 +4,8 @@ flo-bubbles est un element polymer qui d'animter ses enfants avec un effet de ro
 
 **Flo-bubbles en action**
 
+demo: http://site-labs.florian-perrot.fr/perso.html
+
 Animation en cours :
 ![roration_pending](/uploads/3b638672bd23e37a96426e644a69f717/roration_pending.png)
 
