@@ -1,0 +1,199 @@
+<dom-module id="flo-bubbles">
+
+  <template>
+    <style>
+      :host {
+        position: relative;
+      }
+
+      :host ::content > * {
+        transform: translate(-50%, -50%);
+        position: absolute;
+      }
+    </style>
+
+    <content id="content"></content>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'flo-bubbles',
+
+      properties: {
+
+        startDeg: {
+          type: String,
+          value: 0
+        },
+
+        nbSteps: {
+          type: String,
+          value: 0
+        },
+
+        duration: {
+          type: String,
+          value: 1
+        },
+
+        direction: {
+          type: String,
+          value: "normal" // reverse | normal
+        },
+
+        chronological: {
+          type: String,
+          value: "normal" // reverse | normal
+        },
+
+        elevation: {
+          type: Boolean,
+          value: false
+        },
+
+        //Launch animation
+        animate: {
+          type: Boolean,
+          value: false,
+          observer: 'animateChanged'
+        }
+      },
+
+      styleElement: null,
+      timeoutAnimation: null,
+      guid: null,
+
+      ready: function() {
+        //Gen guid
+        this.guid = this.genGuid();
+        this.dataset.guid = this.guid;
+
+        //Create style element
+        this.styleElement = document.createElement("style");
+        this.styleElement.type = "text/css";
+        document.head.appendChild(this.styleElement);
+
+        //Set pos
+        this.sync();
+
+        //Create keyframe for each children
+        this.setKeyframes();
+      },
+
+      getKeyframeName: function(itemId) {
+        return "flo-bubble-item-"+itemId+"-"+this.guid;
+      },
+
+      animateChanged: function(newState){
+        var children = Polymer.dom(this).children;
+
+        if(this.styleElement != null){
+          for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if(newState){
+              child.style.animation = this.getKeyframeName(i+1)+" "+parseInt(this.duration)+"s";
+              child.style.animationTimingFunction = "linear";
+              child.style.animationDirection = this.direction;
+              clearTimeout(this.timeoutAnimation);
+              this.timeoutAnimation = setTimeout(function(){
+                this.removeAttribute('animate');
+              }.bind(this), this.duration*1000);
+            }
+            else{
+              clearTimeout(this.timeoutAnimation);
+              child.style.animation = "";
+              child.style.animationTimingFunction = "";
+              child.style.animationDirection = "";
+            }
+          }
+        }
+      },
+
+      sync: function() {
+        var children = Polymer.dom(this).children;
+        var degBetweenItem = 360/children.length;
+
+        //Foreach children set position
+        for (var i = 0; i < children.length; i++) {
+          var child = children[i];
+
+          var inverser = this.chronological == "normal" ? 1 : -1;//Chronologique ou antéchronologique
+          var rad = (this.toRadians((degBetweenItem * i) + parseInt(this.startDeg))) * inverser;
+
+          //Calc position
+          var left = parseInt((Math.cos(rad) + 1) * 50);
+          var top = parseInt((Math.sin(rad) + 1) * 50);
+
+          //Set position
+          child.style.left = left + "%";
+          child.style.top = top + "%";
+          child.classList.add('elevation-1');
+        }
+
+      },
+
+      setKeyframes: function() {
+        this.styleElement.innerHTML = "";
+
+        var children = Polymer.dom(this).children;
+        var totalSteps = children.length + parseInt(this.nbSteps) * (children.length - 1);
+
+        //Child 0 not animate
+        for (var i = 0; i < children.length; i++) {
+
+          //Init keyframe with unique animation ID
+          var keyframe = "@keyframes "+this.getKeyframeName(i+1)+"{";
+
+          var rotateToRealise = 360*i/children.length;
+          var nbSteps = i + 1 + parseInt(this.nbSteps) * i;
+
+          for (var step = 0; step < totalSteps; step++) {
+            if(step < nbSteps){
+              var percent = parseInt(100 * (step / (totalSteps - 1)));//Percent for this step
+
+              var inverser = (this.chronological == "normal") ? 1 : -1;//Chronologique ou antéchronologique
+              var deg = (rotateToRealise * (step / (nbSteps - 1)));
+              var rad = this.toRadians(deg + parseInt(this.startDeg)) * inverser;
+
+              //Get pos for this step
+              var left =  parseInt((Math.cos(rad) + 1) * 50);
+              var top = parseInt((Math.sin(rad) + 1) * 50);
+
+              //Add step to keyframe
+              keyframe += percent+"%{";
+              if(!isNaN(left) && !isNaN(top)){
+                keyframe += "left:" + left + "%;top:" + top + "%;";
+              }
+              if(this.elevation && (step == nbSteps-this.nbSteps || nbSteps == 1)){
+                keyframe += "box-shadow: 0 24px 38px 3px rgba(0, 0, 0, 0.14), 0 9px 46px 8px rgba(0, 0, 0, 0.12), 0 11px 15px -7px rgba(0, 0, 0, 0.4);";
+              }
+              keyframe += "}";
+            }
+
+            if(step == totalSteps-1) {
+              keyframe += "100%{box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);}";
+            }
+          }
+          keyframe += "}";
+
+          //Add keyframe
+          this.styleElement.innerHTML += keyframe;
+          if(this.animate == true) {
+            this.animateChanged(true);
+          }
+        }
+      },
+
+      //Utils
+      genGuid: function () {
+        var guid = Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+        return document.querySelectorAll('[data-guid="'+guid+'"]').length > 0 ? this.genGuid() : guid;
+      },
+      toRadians: function (angle) {
+        return angle* (Math.PI / 180)
+      }
+    });
+  </script>
+</dom-module>
