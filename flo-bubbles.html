@@ -6,7 +6,7 @@
         position: relative;
       }
 
-      :host ::content > * {
+      :host ::content > .flo-bubble {
         transform: translate(-50%, -50%);
         position: absolute;
       }
@@ -56,12 +56,35 @@
           type: Boolean,
           value: false,
           observer: 'animateChanged'
+        },
+
+        //Responsives attributes
+        responsiveWidth: {
+          type: String,
+          value: 0
+        },
+        responsiveHeight: {
+          type: String,
+          value: 0
         }
       },
 
+      isAnimate: false,
       styleElement: null,
       timeoutAnimation: null,
       guid: null,
+
+      //Observer
+      animateChanged: function(newState){
+        if(this.styleElement != null && this.isAnimate){
+          if(newState){
+            this.setAnimationStyle();
+          }
+          else{
+            this.unsetAnimationStyle();
+          }
+        }
+      },
 
       ready: function() {
         //Gen guid
@@ -73,49 +96,61 @@
         this.styleElement.type = "text/css";
         document.head.appendChild(this.styleElement);
 
-        //Set pos
-        this.sync();
+        if(this.responsiveHeight != 0 || this.responsiveWidth != 0){
+          window.addEventListener("resize", this.resizeEvent.bind(this));
+        }
 
-        //Create keyframe for each children
+        this.resizeEvent();
         this.setKeyframes();
       },
 
-      getKeyframeName: function(itemId) {
-        return "flo-bubble-item-"+itemId+"-"+this.guid;
-      },
-
-      animateChanged: function(newState){
-        var children = Polymer.dom(this).children;
-
-        if(this.styleElement != null){
-          for (var i = 0; i < children.length; i++) {
-            var child = children[i];
-            if(newState){
-              child.style.animation = this.getKeyframeName(i+1)+" "+parseInt(this.duration)+"s";
-              child.style.animationTimingFunction = "linear";
-              child.style.animationDirection = this.direction;
-              clearTimeout(this.timeoutAnimation);
-              this.timeoutAnimation = setTimeout(function(){
-                this.removeAttribute('animate');
-              }.bind(this), this.duration*1000);
-            }
-            else{
-              clearTimeout(this.timeoutAnimation);
-              child.style.animation = "";
-              child.style.animationTimingFunction = "";
-              child.style.animationDirection = "";
-            }
-          }
+      //For responsive Mode
+      resizeEvent: function(){
+        if(!this.isAnimate && window.innerWidth >= this.responsiveWidth && window.innerHeight >= this.responsiveHeight){
+          this.setDefaultPosition();
+          this.setAnimationStyle();
+          this.isAnimate = true;
+        }
+        else if(this.isAnimate  && (this.responsiveWidth > window.innerWidth || this.responsiveHeight > window.innerHeight)){
+          this.unsetDefaultPosition();
+          this.unsetAnimationStyle();
+          this.isAnimate = false;
         }
       },
 
-      sync: function() {
+      setAnimationStyle: function() {
+        var children = Polymer.dom(this).children;
+        for (var i = 0; i < children.length; i++) {
+          var child = children[i];
+          child.style.animation = this.getKeyframeName(i+1)+" "+parseInt(this.duration)+"s";
+          child.style.animationTimingFunction = "linear";
+          child.style.animationDirection = this.direction;
+          clearTimeout(this.timeoutAnimation);
+          this.timeoutAnimation = setTimeout(function(){
+            this.removeAttribute('animate');
+          }.bind(this), this.duration*1000);
+
+        }
+      },
+      unsetAnimationStyle: function() {
+        var children = Polymer.dom(this).children;
+        for (var i = 0; i < children.length; i++) {
+          var child = children[i];
+          clearTimeout(this.timeoutAnimation);
+          child.style.animation = "";
+          child.style.animationTimingFunction = "";
+          child.style.animationDirection = "";
+        }
+      },
+
+      setDefaultPosition: function() {
         var children = Polymer.dom(this).children;
         var degBetweenItem = 360/children.length;
 
         //Foreach children set position
         for (var i = 0; i < children.length; i++) {
           var child = children[i];
+          child.classList.add('flo-bubble');
 
           var inverser = this.chronological == "normal" ? 1 : -1;//Chronologique ou antéchronologique
           var rad = (this.toRadians((degBetweenItem * i) + parseInt(this.startDeg))) * inverser;
@@ -129,7 +164,18 @@
           child.style.top = top + "%";
           child.classList.add('elevation-1');
         }
+      },
+      unsetDefaultPosition: function() {
+        var children = Polymer.dom(this).children;
 
+        //Foreach children unset position
+        for (var i = 0; i < children.length; i++) {
+          var child = children[i];
+          child.classList.remove('flo-bubble');
+          child.style.removeProperty('left');
+          child.style.removeProperty('top');
+          child.classList.remove('elevation-1');
+        }
       },
 
       setKeyframes: function() {
@@ -175,16 +221,13 @@
             }
           }
           keyframe += "}";
-
-          //Add keyframe
-          this.styleElement.innerHTML += keyframe;
-          if(this.animate == true) {
-            this.animateChanged(true);
-          }
         }
       },
 
       //Utils
+      getKeyframeName: function(itemId) {
+        return "flo-bubble-item-"+itemId+"-"+this.guid;
+      },
       genGuid: function () {
         var guid = Math.floor((1 + Math.random()) * 0x10000)
           .toString(16)
