@@ -21,3 +21,4 @@ Animation fini:
 - **chronological:** normal|revert - Normal étant le sens des aiguilles d'une montre, par défault normal
 - **elevation:** Boolean - Active l'effet d'élévation lors de l'animation
 - **animate:** Boolean - A chaque fois que cet attribute est ajouté a l'element l'animation se lance
+- **responsive-width & responsive-height:** Integer - Resolution pour laquelle le composant doit etre desactive
