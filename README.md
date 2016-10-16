@@ -1,6 +1,6 @@
 # FLO-BUBBLES
 
-flo-bubbles est un element polymer qui animte ses enfants avec un effet de rotation.
+flo-bubbles est un element polymer qui anime ses enfants avec un effet de rotation.
 
 **Flo-bubbles en action**
 
