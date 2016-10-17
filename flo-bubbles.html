@@ -162,7 +162,6 @@
           //Set position
           child.style.left = left + "%";
           child.style.top = top + "%";
-          child.classList.add('elevation-1');
         }
       },
       unsetDefaultPosition: function() {
@@ -174,7 +173,6 @@
           child.classList.remove('flo-bubble');
           child.style.removeProperty('left');
           child.style.removeProperty('top');
-          child.classList.remove('elevation-1');
         }
       },
 
@@ -216,7 +214,7 @@
               keyframe += "}";
             }
 
-            if(step == totalSteps-1) {
+            if(this.elevation && step == totalSteps-1) {
               keyframe += "100%{box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 1px 5px 0 rgba(0, 0, 0, 0.12), 0 3px 1px -2px rgba(0, 0, 0, 0.2);}";
             }
           }
